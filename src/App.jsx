@@ -5,6 +5,9 @@ import Movies from "./Movies.jsx";
 import Cart from "./Cart.jsx";
 import About from "./About.jsx";
 import "./App.css";
+import MovieIcon from "./icons/MovieIcon.jsx";
+import CartIcon from "./icons/CartIcon.jsx";
+import AboutIcon from "./icons/AboutIcon.jsx";
 
 function App() {
   return (
@@ -13,9 +16,18 @@ function App() {
         {/* Navigation bar */}
         <nav>
           <Link to="/">StreamList</Link>
-          <Link to="/movies">Movies</Link>
-          <Link to="/cart">Cart</Link>
-          <Link to="/about">About</Link>
+            <Link to="/movies" className="nav-item">
+    <MovieIcon className="nav-icon" />
+    Movies
+  </Link>
+          <Link to="/cart" className="nav-item">
+    <CartIcon size={20} />
+    Cart
+  </Link>
+          <Link to="/about" className="nav-item">
+  <AboutIcon size={20} />
+  About
+</Link>
         </nav>
 
         {/* Header box */}
