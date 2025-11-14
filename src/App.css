@@ -61,3 +61,13 @@ nav a {
 nav a:hover {
   color: #646cff;
 }
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 8px; /* space between icon and text */
+}
+
+.nav-icon {
+  width: 20px;
+  height: 20px;
+}
