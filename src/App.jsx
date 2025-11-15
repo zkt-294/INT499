@@ -21,25 +21,44 @@ function App() {
     return saved ? JSON.parse(saved) : [];
   });
 
-  // Save cart to localStorage whenever it updates
+  // Save cart to localStorage whenever cartItems changes
   useEffect(() => {
     localStorage.setItem("cartItems", JSON.stringify(cartItems));
   }, [cartItems]);
 
   // Add item to cart
   const addToCart = (item) => {
-    setCartItems((prev) => [...prev, item]);
-  };
+    setCartItems((prev) => {
+      const isSubscription = item.id >= 1 && item.id <= 4;
 
-  // Remove item from cart
-  const removeFromCart = (index) => {
-    setCartItems((prev) => prev.filter((_, i) => i !== index));
+      if (isSubscription) {
+        // Only allow one subscription
+        const existingSubscription = prev.find((i) => i.id >= 1 && i.id <= 4);
+        if (existingSubscription) {
+          alert("You can only have one subscription at a time!");
+          return prev;
+        }
+        return [...prev, { ...item, amount: 1 }];
+      } else {
+        // Accessories/items can have multiple
+        const existingIndex = prev.findIndex((i) => i.id === item.id);
+        if (existingIndex >= 0) {
+          const updated = [...prev];
+          updated[existingIndex] = {
+            ...updated[existingIndex],
+            amount: updated[existingIndex].amount + 1,
+          };
+          return updated;
+        } else {
+          return [...prev, { ...item, amount: 1 }];
+        }
+      }
+    });
   };
 
   return (
     <Router>
       <div className="app-container">
-
         {/* Navigation Bar */}
         <nav>
           <Link to="/">StreamList</Link>
@@ -82,27 +101,16 @@ function App() {
 
           <Route
             path="/cart"
-            element={
-              <Cart
-                cartItems={cartItems}
-                removeFromCart={removeFromCart}
-              />
-            }
+            element={<Cart cartItems={cartItems} setCartItems={setCartItems} />}
           />
 
           <Route
             path="/subscriptions"
-            element={
-              <Subscriptions
-                cartItems={cartItems}
-                onAddToCart={addToCart}
-              />
-            }
+            element={<Subscriptions cartItems={cartItems} onAddToCart={addToCart} />}
           />
 
           <Route path="/about" element={<About />} />
         </Routes>
-
       </div>
     </Router>
   );
