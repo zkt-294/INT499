@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "./StreamList.css";
 
 function StreamList() {
@@ -6,13 +6,22 @@ function StreamList() {
   const [type, setType] = useState("movie");
   const [status, setStatus] = useState("need-to-watch");
 
-  const [items, setItems] = useState([]);
-  const [editId, setEditId] = useState(null); // which item is being editing
+  // Loads saved items
+  const [items, setItems] = useState(() => {
+    const saved = localStorage.getItem("streamlist-items");
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  const [editId, setEditId] = useState(null);
+
+  // Save items on updates also
+  useEffect(() => {
+    localStorage.setItem("streamlist-items", JSON.stringify(items));
+  }, [items]);
 
   const handleAdd = () => {
     if (title.trim() === "") return;
 
-    // If editing, update the existing item
     if (editId !== null) {
       setItems(
         items.map((item) =>
@@ -22,9 +31,7 @@ function StreamList() {
         )
       );
       setEditId(null);
-    } 
-    else {
-      // Add new item
+    } else {
       const newItem = {
         id: Date.now(),
         title,
@@ -34,7 +41,6 @@ function StreamList() {
       setItems([...items, newItem]);
     }
 
-    // reset form
     setTitle("");
     setType("movie");
     setStatus("need-to-watch");
@@ -48,7 +54,7 @@ function StreamList() {
     setTitle(item.title);
     setType(item.type);
     setStatus(item.status);
-    setEditId(item.id); // mark which item is being edited
+    setEditId(item.id);
   };
 
   return (
