@@ -1,17 +1,32 @@
 import React from "react";
 
-export default function Cart({ cartItems, removeFromCart }) {
+export default function Cart({ cartItems, setCartItems }) {
   // Calculate total price
-  const totalPrice = cartItems.reduce((total, item) => total + (item.price || 0), 0);
+  const totalPrice = cartItems.reduce(
+    (total, item) => total + (item.price || 0) * (item.amount || 1),
+    0
+  );
+
+  // Remove item
+  const removeFromCart = (index) => {
+    const updated = cartItems.filter((_, i) => i !== index);
+    setCartItems(updated);
+  };
+
+  // Update quantity
+  const updateQuantity = (index, newAmount) => {
+    if (newAmount < 1) return;
+
+    const updated = cartItems.map((item, i) =>
+      i === index ? { ...item, amount: newAmount } : item
+    );
+    setCartItems(updated);
+  };
 
   return (
     <div className="movies-page">
       <h2>Your Cart</h2>
-      
-      {/* Total price */}
-      <div style={{ marginBottom: "20px", fontWeight: "bold", fontSize: "1.2em" }}>
-        Total: ${totalPrice.toFixed(2)}
-      </div>
+      <h3>Total: ${totalPrice.toFixed(2)}</h3>
 
       <div className="results-grid">
         {cartItems.length === 0 ? (
@@ -34,6 +49,22 @@ export default function Cart({ cartItems, removeFromCart }) {
                 <p>{type}</p>
                 {extraInfo && <p>{extraInfo}</p>}
                 {item.price && <p>${item.price.toFixed(2)}</p>}
+
+                {/* Quantity selector */}
+                <div style={{ margin: "10px 0" }}>
+                  Quantity:{" "}
+                  <input
+                    type="number"
+                    min="1"
+                    value={item.amount}
+                    onChange={(e) =>
+                      updateQuantity(index, parseInt(e.target.value) || 1)
+                    }
+                    style={{ width: "50px" }}
+                    disabled={item.id >= 1 && item.id <= 4} // disable for subscriptions
+                  />
+                </div>
+
                 <button onClick={() => removeFromCart(index)}>Remove</button>
               </div>
             );
