@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "./StreamList.css";
 
 function StreamList() {
@@ -6,13 +6,34 @@ function StreamList() {
   const [type, setType] = useState("movie");
   const [status, setStatus] = useState("need-to-watch");
 
-  const [items, setItems] = useState([]);
-  const [editId, setEditId] = useState(null); // which item is being editing
+  // Loads saved items
+  const [items, setItems] = useState(() => {
+    const saved = localStorage.getItem("streamlist-items");
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  const [editId, setEditId] = useState(null);
+
+  // Save items on updates also
+  useEffect(() => {
+    localStorage.setItem("streamlist-items", JSON.stringify(items));
+  }, [items]);
 
   const handleAdd = () => {
     if (title.trim() === "") return;
 
-    // If editing, update the existing item
+    // Check for duplicate title (case-insensitive)
+    const normalizedTitle = title.trim().toLowerCase();
+    const isDuplicate = items.some(
+      (item) =>
+        item.title.trim().toLowerCase() === normalizedTitle &&
+        (editId === null || item.id !== editId)
+    );
+    if (isDuplicate) {
+      alert("This title already exists in your list.");
+      return;
+    }
+
     if (editId !== null) {
       setItems(
         items.map((item) =>
@@ -22,9 +43,7 @@ function StreamList() {
         )
       );
       setEditId(null);
-    } 
-    else {
-      // Add new item
+    } else {
       const newItem = {
         id: Date.now(),
         title,
@@ -34,7 +53,6 @@ function StreamList() {
       setItems([...items, newItem]);
     }
 
-    // reset form
     setTitle("");
     setType("movie");
     setStatus("need-to-watch");
@@ -48,44 +66,67 @@ function StreamList() {
     setTitle(item.title);
     setType(item.type);
     setStatus(item.status);
-    setEditId(item.id); // mark which item is being edited
+    setEditId(item.id);
   };
 
   return (
     <div className="streamlist-container">
-      <h2>Your StreamList</h2>
+      <h2 id="streamlist-heading">Your StreamList</h2>
 
-      <div className="input-section">
+      <form
+        className="input-section"
+        onSubmit={(e) => {
+          e.preventDefault();
+          handleAdd();
+        }}
+        aria-labelledby="streamlist-heading"
+      >
+        <label htmlFor="streamlist-title">Title</label>
         <input
+          id="streamlist-title"
           type="text"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           placeholder="Add something you silly goose!"
+          aria-required="true"
         />
 
-        <select value={type} onChange={(e) => setType(e.target.value)}>
+        <label htmlFor="streamlist-type">Type</label>
+        <select
+          id="streamlist-type"
+          value={type}
+          onChange={(e) => setType(e.target.value)}
+        >
           <option value="movie">Movie</option>
           <option value="show">Show</option>
         </select>
 
-        <select value={status} onChange={(e) => setStatus(e.target.value)}>
+        <label htmlFor="streamlist-status">Status</label>
+        <select
+          id="streamlist-status"
+          value={status}
+          onChange={(e) => setStatus(e.target.value)}
+        >
           <option value="need-to-watch">Need to Watch</option>
           <option value="already-watched">Already Watched</option>
         </select>
 
-        <button onClick={handleAdd}>
+        <button type="submit" aria-label={editId ? "Update item" : "Add item"}>
           {editId ? "Update" : "Add"}
         </button>
-      </div>
+      </form>
 
-      <ul className="item-list">
+      <ul className="item-list" aria-live="polite">
         {items.map((item) => (
           <li key={item.id}>
-            <strong>{item.title}</strong> — {item.type} — {item.status}
+            <span>
+              <strong>{item.title}</strong> — {item.type} — {item.status}
+            </span>
 
             <button
               style={{ marginLeft: "10px" }}
               onClick={() => handleEdit(item)}
+              aria-label={`Edit ${item.title}`}
             >
               Edit
             </button>
@@ -93,6 +134,7 @@ function StreamList() {
             <button
               style={{ marginLeft: "10px" }}
               onClick={() => handleDelete(item.id)}
+              aria-label={`Delete ${item.title}`}
             >
               Delete
             </button>
